@@ -1,85 +1,45 @@
-extern crate piston;
-extern crate graphics;
-extern crate glutin_window;
-extern crate opengl_graphics;
+extern crate sdl2;
+extern crate sdl2_image;
+extern crate find_folder;
 
-use piston::window::WindowSettings;
-use piston::event::*;
-use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ GlGraphics, OpenGL };
-
-pub struct App {
-    gl: GlGraphics, // OpenGL drawing backend.
-    rotation: f64   // Rotation for the square.
-}
-
-impl App {
-    fn render(&mut self, args: &RenderArgs) {
-        use graphics::*;
-
-        const GREEN: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
-        const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-        const RADIUS: f64     = 70.0;
-
-        let square = rectangle::square(0.0, 0.0, 50.0);
-        let rotation = self.rotation;
-        let (x, y) = ((args.draw_width / 2) as f64,
-                      (args.draw_height / 2) as f64);
-
-        self.gl.draw(args.viewport(), |c, gl| {
-            // Clear the screen.
-            clear(GREEN, gl);
-
-            let transform = c.transform.trans(x, y)
-                                       .rot_rad(rotation)
-                                       .trans(-25.0, -25.0);
-
-            // Draw a box rotating around the middle of the screen.
-            rectangle(RED, square, transform, gl);
-
-            let (off_x, off_y) = (RADIUS * rotation.cos(),
-                                  RADIUS * -rotation.sin());
-
-            let transform = c.transform.trans(x, y)
-                                       .trans(off_x, off_y);
-
-            ellipse(RED, rectangle::square(0.0, 0.0, 5.0), transform, gl);
-        });
-    }
-
-    fn update(&mut self, args: &UpdateArgs) {
-        // Rotate 2 radians per second.
-        self.rotation += 2.0 * args.dt;
-    }
-}
+use sdl2_image::{LoadTexture, INIT_PNG};
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
 
 fn main() {
-    // Change this to OpenGL::V2_1 if not working.
-    let opengl = OpenGL::V3_2;
+    const TITLE: &'static str = "Platformer";
 
-    // Create an Glutin window.
-    let window = Window::new(
-        WindowSettings::new(
-            "spinning-square",
-            [200, 200]
-        )
-        .opengl(opengl)
-        .exit_on_esc(true)
-    );
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+    sdl2_image::init(INIT_PNG);
+    let window = video_subsystem.window(TITLE, 640, 480)
+                                .position_centered()
+                                .opengl()
+                                .build()
+                                .unwrap();
+    let mut renderer = window.renderer().software().build().unwrap();
+    let assets = find_folder::Search::ParentsThenKids(3, 3)
+        .for_folder("assets").unwrap();
+    let sprite = assets.join("sprite.png");
+    let sprite = renderer.load_texture(&sprite).unwrap();
 
-    // Create a new game and run it.
-    let mut app = App {
-        gl: GlGraphics::new(opengl),
-        rotation: 0.0
-    };
+    renderer.clear();
+    renderer.copy(&sprite, None, None);
+    renderer.present();
 
-    for e in window.events() {
-        if let Some(r) = e.render_args() {
-            app.render(&r);
-        }
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut running = true;
 
-        if let Some(u) = e.update_args() {
-            app.update(&u);
+    while running {
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{..} | Event::KeyDown{keycode: Some(Keycode::Escape), ..} => {
+                    running = false
+                },
+                _ => ()
+            }
         }
     }
+
+    sdl2_image::quit();
 }

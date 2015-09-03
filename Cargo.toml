@@ -7,7 +7,6 @@ authors = ["Jacob Fenton <jacob.d.fenton@gmail.com>"]
 name = "platformer"
 
 [dependencies]
-piston = "0.4.1"
-piston2d-graphics = "0.4.1"
-pistoncore-glutin_window = "0.6.0"
-piston2d-opengl_graphics = "0.6.0"
+sdl2 = "0.8"
+sdl2_image = "0.2.1"
+find_folder = "*"
