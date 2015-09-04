@@ -215,7 +215,7 @@ pub trait Updateable {
 
 impl Updateable for Game {
     fn update(&mut self) {
-        ()
+        self.player.update();
     }
 }
 
@@ -236,15 +236,12 @@ impl<'a> Updateable for System<'a> {
             }
         }
 
-        //if event_pump.keyboard_state().is_scancode_pressed(Scancode::Left) {
-            //player.a.x -= 1.0;
-        //}
-        //if event_pump.keyboard_state().is_scancode_pressed(Scancode::Right) {
-            //player.a.x += 1.0;
-        //}
-        //if event_pump.keyboard_state().is_scancode_pressed(Scancode::Up) {
-            //player.a.y += ;
-        //}
+        if self.ev_pump.keyboard_state().is_scancode_pressed(Scancode::Left) {
+            self.game.player.a.x -= 1.0;
+        }
+        if self.ev_pump.keyboard_state().is_scancode_pressed(Scancode::Right) {
+            self.game.player.a.x += 1.0;
+        }
 
         self.game.update();
     }
