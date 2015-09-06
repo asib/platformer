@@ -1,10 +1,11 @@
+#[doc="false"]
+
 extern crate sdl2;
 extern crate sdl2_image;
 extern crate find_folder;
 extern crate platformer;
 
 use std::rc::Rc;
-use std::sync::mpsc::Receiver;
 use platformer::*;
 use sdl2_image::{LoadTexture, INIT_PNG};
 use sdl2::rect::Rect;
@@ -26,15 +27,21 @@ fn main() {
         .unwrap();
     let mut r = window.renderer().software().build().unwrap();
     let mut sys = System::new(
-        Game::new(MoveableEntity::new(
-            Point::origin(),
+        Game::new(Player::new(
+            Point{x:50, y: 50},
             Rect::new(0, 0, 32, 62).unwrap().unwrap(),
             Rc::new(r.load_texture(&asset_path.join("claudius.png"))
                          .unwrap()),
             Rect::new(0, 0, 32, 62).unwrap(),
-            Direction::Down,
-            Velocity::zero(),
-            Acceleration::zero()
+            Direction::Right,
+            FPS,
+            FPS,
+            FPS,
+            FPS,
+            1,
+            1,
+            5,
+            5
         )),
         r,
         FPS,

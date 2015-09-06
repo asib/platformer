@@ -5,6 +5,7 @@ authors = ["Jacob Fenton <jacob.d.fenton@gmail.com>"]
 
 [[bin]]
 name = "platformer"
+doc = false
 
 [dependencies]
 sdl2 = "0.8"
