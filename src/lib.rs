@@ -9,6 +9,7 @@ use sdl2::render::{Renderer, Texture};
 use sdl2::rect::Rect;
 use sdl2::event::Event;
 use sdl2::keyboard::{Keycode, Scancode};
+use sdl2::pixels::Color;
 
 #[macro_export]
 macro_rules! hashmap {
@@ -368,7 +369,7 @@ pub struct System<'a> {
 
 impl<'a> System<'a> {
     /// Create a new `System`.
-    pub fn new(g: Game, dbug: bool, r: Renderer<'a>, fps: u8, ep: EventPump, a: &'a Path) -> Self {
+    pub fn new(g: Game, r: Renderer<'a>, fps: u8, ep: EventPump, a: &'a Path) -> Self {
         System {
             game: g,
             r: r,
@@ -405,7 +406,17 @@ impl DebugDrawable for MoveableEntity {
 
 impl DebugDrawable for Entity {
     fn draw_debug(&mut self, r: &mut Renderer) {
-        r.draw_rect(self.collision_rect);
+        let rect = &self.collision_rect;
+        let draw_col = r.draw_color();
+        r.set_draw_color(Color::RGB(255, 0, 0));
+        r.draw_rect(Rect::new_unwrap(
+            rect.x() + self.pos.x as i32,
+            rect.y() + self.pos.y as i32,
+            rect.width(),
+            rect.height()
+        ));
+        r.set_draw_color(draw_col);
+        r.present();
     }
 }
 
