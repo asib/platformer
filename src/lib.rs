@@ -1,4 +1,6 @@
 extern crate sdl2;
+extern crate rustc_serialize;
+extern crate flate2;
 
 use std::rc::Rc;
 use std::path::Path;
@@ -10,6 +12,8 @@ use sdl2::rect::Rect;
 use sdl2::event::Event;
 use sdl2::keyboard::{Keycode, Scancode};
 use sdl2::pixels::Color;
+
+mod tiled;
 
 #[macro_export]
 macro_rules! hashmap {
@@ -236,10 +240,10 @@ impl MoveableEntity {
     }
 
     pub fn keep_on_screen(&mut self, w: u32, h: u32) {
-        if self.en.pos.x < 0 {
-            self.en.pos.x = 0;
-        } else if (self.en.pos.x + self.en.collision_rect.width() as i64) > w as i64 {
-            self.en.pos.x = w as i64 - self.en.collision_rect.width() as i64;
+        if (self.en.collision_rect.x() as i64 + self.en.pos.x) < 0 {
+            self.en.pos.x = -self.en.collision_rect.x() as i64;
+        } else if (self.en.collision_rect.x() as i64 + self.en.pos.x + self.en.collision_rect.width() as i64) > w as i64 {
+            self.en.pos.x = w as i64 - (self.en.collision_rect.width() as i64 + self.en.collision_rect.x() as i64);
         }
         if self.en.pos.y < 0 {
             self.en.pos.y = 0;

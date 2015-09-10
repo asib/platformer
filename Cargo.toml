@@ -11,3 +11,5 @@ doc = false
 sdl2 = "0.8"
 sdl2_image = "0.2.1"
 find_folder = "*"
+flate2 = "0.2"
+rustc-serialize = "0.3"

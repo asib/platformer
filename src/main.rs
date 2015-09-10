@@ -30,6 +30,7 @@ fn main() {
     let mut sys = System::new(
         Game::new(
             true,
+            // false,
             Player::new(
                 Point{x:50, y: 50},
                 Rect::new(10, 00, 32, 60).unwrap().unwrap(),
