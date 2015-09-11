@@ -74,6 +74,20 @@ fn main() {
         &asset_path
     );
 
+    let map = match tiled::Map::read_json(sys.assets.join("map.json")) {
+        Ok(m) => m,
+        Err(e) => match e {
+            tiled::ReadError::IoError(e) => panic!("IOError: {:?}", e),
+            tiled::ReadError::StringError(e) => panic!("StringError: {:?}", e),
+            tiled::ReadError::JsonError(e) => panic!("JSONError: {:?}", e),
+        },
+    };
+
+    match map.data(0) {
+        Ok(d) => println!("{:?}", d),
+        Err(e) => panic!("{:?}", e),
+    };
+
     while sys.game.running {
         sys.update();
         sys.game.draw(&mut sys.r);
