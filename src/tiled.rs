@@ -5,7 +5,6 @@ use std::result::Result;
 use std::fs::File;
 use std::io::Read;
 use std::string::FromUtf8Error;
-use std::ops::Deref;
 use rustc_serialize::json;
 use rustc_serialize::base64::FromBase64;
 use rustc_serialize::base64::FromBase64Error;

@@ -14,6 +14,7 @@ use sdl2::keyboard::{Keycode, Scancode};
 use sdl2::pixels::Color;
 
 pub mod tiled;
+pub mod map;
 
 #[macro_export]
 macro_rules! hashmap {
