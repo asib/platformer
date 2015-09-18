@@ -1,46 +1,32 @@
-{ "height":16,
+{ "height":10,
  "layers":[
         {
          "compression":"zlib",
-         "data":"eJxjYBgFo4B8YEkEFqPAfE4iMC7ADcQ8SFicyubT2v0woMSAPVwVqWA+yGxdIA7Bgil1Pz6zKTFfAep\/fGZT6n585pJqfiAWTE3z9bFgYs0HAP7sGP8=",
+         "data":"eJxjYKAvsMSBxejsDkoBNxDzQLH4ALoDV3gSwpxkYgDBVQVD",
          "encoding":"base64",
-         "height":16,
+         "height":10,
          "name":"Tile Layer 1",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
-         "width":24,
+         "width":14,
          "x":0,
          "y":0
         }, 
         {
+         "color":"#a0a0ff",
          "draworder":"topdown",
-         "height":16,
+         "height":0,
          "name":"Object Layer 1",
-         "objects":[
-                {
-                 "height":0,
-                 "id":18,
-                 "name":"start_point",
-                 "properties":
-                    {
-
-                    },
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":106,
-                 "y":246
-                }],
+         "objects":[],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
-         "width":24,
+         "width":0,
          "x":0,
          "y":0
         }],
- "nextobjectid":19,
+ "nextobjectid":14,
  "orientation":"orthogonal",
  "properties":
     {
@@ -67,5 +53,5 @@
         }],
  "tilewidth":70,
  "version":1,
- "width":24
+ "width":14
 }

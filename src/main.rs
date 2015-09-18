@@ -18,7 +18,7 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     sdl2_image::init(INIT_PNG);
-    let window = video_subsystem.window(TITLE, 640, 480)
+    let window = video_subsystem.window(TITLE, 980, 700)
         .position_centered()
         .opengl()
         .build()
@@ -83,17 +83,29 @@ fn main() {
         },
     };
 
-    match map.data(0) {
-        Ok(d) => println!("{:?}", d),
+    match map.data_for_layer(0) {
+        Ok(d) => println!("{}\n {:?}", d.len(), d),
         Err(e) => panic!("{:?}", e),
     };
 
+    let ts = map::Tileset::new_from_tiled_tileset(&sys.assets.join("Platformer Pack/tiles_spritesheet.png"),
+        &map.tilesets[0], &sys.r);
+    let mut new_map = map::Map::new_from_tiled_map(&map);
+    if let Ok(data) = map.data_for_layer(0) {
+        new_map.insert_data_using_tilset(&data, &ts);
+    }
+
+    println!("{:?}", new_map.tiles.iter().map(|ref l| l.iter().map(|ref t| t.clip_rect).collect::<Vec<Option<Rect>>>()).collect::<Vec<Vec<Option<Rect>>>>());
+
     while sys.game.running {
         sys.update();
+        sys.game.clear(&mut sys.r);
+        new_map.draw(&mut sys.r);
         sys.game.draw(&mut sys.r);
         if sys.game.debug {
             sys.game.draw_debug(&mut sys.r);
         }
+        sys.game.flip_buffer(&mut sys.r);
     }
 
     sdl2_image::quit();

@@ -57,6 +57,7 @@ impl<'a> From<std::io::Error> for DataError {
 
 #[derive(RustcDecodable, RustcEncodable, Clone, Debug)]
 pub struct Tileset {
+    pub firstgid: u32,
     pub image: String,
     pub imagewidth: u32,
     pub imageheight: u32,
@@ -95,7 +96,7 @@ impl Map {
         Ok(map)
     }
 
-    pub fn data(&self, layer: usize) -> Result<Vec<u8>, DataError> {
+    pub fn data_for_layer(&self, layer: usize) -> Result<Vec<u8>, DataError> {
         let data = if let Some(l) = self.layers.get(layer) {
             if let Some(d) = l.data.clone() { d }
             else { return Err(DataError::NoDataError) }

@@ -1,4 +1,5 @@
 extern crate sdl2;
+extern crate sdl2_image;
 extern crate rustc_serialize;
 extern crate flate2;
 
@@ -112,53 +113,6 @@ impl Entity {
             collision_rect: cr,
             sprite_map: t,
             draw_rect: dr,
-        }
-    }
-}
-
-/// Contains information about a tileset.
-pub struct Tileset {
-    pub margin: u32,
-    pub spacing: u32,
-    pub tile_count: u32,
-    pub tile_width: u32,
-    pub tile_height: u32,
-    pub image: Rc<Texture>,
-    pub image_width: u32,
-    pub image_height: u32,
-}
-
-pub struct Map {
-    pub width: u32,
-    pub height: u32,
-    pub tile_width: u32,
-    pub tile_height: u32,
-    pub tileset: Tileset,
-    pub data: Vec<Vec<Tile>>,
-}
-
-/// Tells game what to do when this object
-/// collides with another.
-pub enum CollisionType {
-    NoCollide,
-    Collide,
-    Damage(u8),
-    Kill,
-}
-
-/// Contains all the information about an individual
-/// tile in the scene.
-pub struct Tile {
-    pub en: Entity,
-    pub collision: CollisionType,
-}
-
-impl Tile {
-    /// Create a new `Tile`.
-    pub fn new(p: Point, cr: Rect, t: Rc<Texture>, dr: Option<Rect>, ct: CollisionType) -> Self {
-        Tile {
-            en: Entity::new(p, cr, t, dr),
-            collision: ct,
         }
     }
 }
@@ -355,6 +309,14 @@ impl Game {
         }
     }
 
+    pub fn clear(&self, r: &mut Renderer) {
+        r.clear();
+    }
+
+    pub fn flip_buffer(&self, r: &mut Renderer) {
+        r.present();
+    }
+
     pub fn keep_on_screen(&mut self, w: u32, h: u32) {
         self.player.keep_on_screen(w, h);
     }
@@ -421,7 +383,6 @@ impl DebugDrawable for Entity {
             rect.height()
         ));
         r.set_draw_color(draw_col);
-        r.present();
     }
 }
 
@@ -436,9 +397,7 @@ impl Drawable for Game {
     /// `Game`'s `draw` method calls the draw methods
     /// for all entities that are currently onscreen.
     fn draw(&mut self, r: &mut Renderer) {
-        r.clear();
         self.player.draw(r);
-        r.present();
     }
 }
 
