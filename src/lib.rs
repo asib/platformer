@@ -1,7 +1,6 @@
 extern crate sdl2;
 extern crate sdl2_image;
 extern crate rustc_serialize;
-extern crate flate2;
 
 use std::rc::Rc;
 use std::path::Path;

@@ -98,27 +98,16 @@ impl Map {
     }
 
     pub fn insert_data_using_tilset(&mut self, data: &[u8], ts: &Tileset) {
-        for i in 0..(self.width*self.height*4) {
+        for i in 0..self.height {
             let _i = i as usize;
-            if i % (self.width*4) == 0 {
-                self.tiles.push(Vec::with_capacity(self.width as usize));
-            }
-            if i % 4 == 0 {
-                self.tiles[_i / (self.width*4) as usize].push(Tile::new(ts.texture.clone(),
-                    ts.tile_for_id(data[_i] as u32)));
+            self.tiles.push(Vec::with_capacity(self.width as usize));
+
+            for j in 0..self.width {
+                let _j = j as usize;
+                self.tiles[_i].push(Tile::new(ts.texture.clone(),
+                    ts.tile_for_id(data[_i*self.width as usize + _j] as u32)));
             }
         }
-        //for i in 0..len {
-            //self.tiles.push(Vec::with_capacity(len));
-            //for j in 0..len {
-                //let num = i*len + j;
-                //if num % 4 != 0 {
-                    //continue;
-                //}
-                //self.tiles[i].push(Tile::new(ts.texture.clone(),
-                    //ts.tile_for_id(data[num] as u32)));
-            //}
-        //}
     }
 }
 

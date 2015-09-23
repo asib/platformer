@@ -74,7 +74,7 @@ fn main() {
         &asset_path
     );
 
-    let map = match tiled::Map::read_json(sys.assets.join("map.json")) {
+    let map = match tiled::Map::read_json(sys.assets.join("map2.json")) {
         Ok(m) => m,
         Err(e) => match e {
             tiled::ReadError::IoError(e) => panic!("IOError: {:?}", e),
@@ -83,19 +83,19 @@ fn main() {
         },
     };
 
-    match map.data_for_layer(0) {
-        Ok(d) => println!("{}\n {:?}", d.len(), d),
-        Err(e) => panic!("{:?}", e),
-    };
+    // match map.data_for_layer(0) {
+        // Ok(d) => println!("{}\n {:?}", d.len(), d),
+        // Err(e) => panic!("{:?}", e),
+    // };
 
     let ts = map::Tileset::new_from_tiled_tileset(&sys.assets.join("Platformer Pack/tiles_spritesheet.png"),
         &map.tilesets[0], &sys.r);
     let mut new_map = map::Map::new_from_tiled_map(&map);
-    if let Ok(data) = map.data_for_layer(0) {
-        new_map.insert_data_using_tilset(&data, &ts);
+    if let &Some(ref data) = &map.layers[0].data {
+        new_map.insert_data_using_tilset(data, &ts);
     }
 
-    println!("{:?}", new_map.tiles.iter().map(|ref l| l.iter().map(|ref t| t.clip_rect).collect::<Vec<Option<Rect>>>()).collect::<Vec<Vec<Option<Rect>>>>());
+    // println!("{:?}", new_map.tiles.iter().map(|ref l| l.iter().map(|ref t| t.clip_rect).collect::<Vec<Option<Rect>>>()).collect::<Vec<Vec<Option<Rect>>>>());
 
     while sys.game.running {
         sys.update();
