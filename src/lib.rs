@@ -95,6 +95,26 @@ pub enum Direction {
     Landed,
 }
 
+/// Holds information pertaining to the game's camera.
+pub struct Camera {
+    pub pos: Point,
+    pub width: i64,
+    pub height: i64,
+    pub collision_rect: Rect,
+}
+
+impl Camera {
+    /// Create a new `Camera`
+    pub fn new(p: Point, w: i64, h: i64, cr: Rect) -> Self {
+        Camera {
+            pos: p,
+            width: w,
+            height: h,
+            collision_rect: cr,
+        }
+    }
+}
+
 /// Building block struct that holds the basic
 /// data that all game entities need.
 pub struct Entity {
@@ -292,20 +312,28 @@ impl Player {
 
 /// Holds pure game data, as opposed to `System`,
 /// which holds system data like the frame counter.
-pub struct Game {
+pub struct Game<'a> {
     pub running: bool,
     pub debug: bool,
+    pub current_map: Option<&'a mut map::Map>,
+    pub camera: Camera,
     pub player: Player,
 }
 
-impl Game {
+impl<'a> Game<'a> {
     /// Create a new `Game`.
-    pub fn new(db: bool, p: Player) -> Self {
+    pub fn new(db: bool, current_map: Option<&'a mut map::Map>, cam: Camera, p: Player) -> Self {
         Game {
             running: true,
             debug: db,
+            current_map: current_map,
+            camera: cam,
             player: p,
         }
+    }
+
+    pub fn set_map(&mut self, map: &'a mut map::Map) {
+        self.current_map = Some(map);
     }
 
     pub fn clear(&self, r: &mut Renderer) {
@@ -319,12 +347,54 @@ impl Game {
     pub fn keep_on_screen(&mut self, w: u32, h: u32) {
         self.player.keep_on_screen(w, h);
     }
+
+    fn update_camera(&mut self) {
+        let (camera_left, camera_right, camera_top, camera_bottom) = (
+            self.camera.pos.x + self.camera.collision_rect.x() as i64,
+            self.camera.pos.x + self.camera.collision_rect.x() as i64 + self.camera.collision_rect.width() as i64,
+            self.camera.pos.y + self.camera.collision_rect.y() as i64,
+            self.camera.pos.y + self.camera.collision_rect.y() as i64 + self.camera.collision_rect.height() as i64,
+        );
+        let (player_left, player_right, player_top, player_bottom) = (
+            self.player.me.en.pos.x + self.player.me.en.collision_rect.x() as i64,
+            self.player.me.en.pos.x + self.player.me.en.collision_rect.x() as i64 + self.player.me.en.collision_rect.width() as i64,
+            self.player.me.en.pos.y + self.player.me.en.collision_rect.y() as i64,
+            self.player.me.en.pos.y + self.player.me.en.collision_rect.y() as i64 + self.player.me.en.collision_rect.height() as i64,
+        );
+
+        let map = self.current_map.as_ref().unwrap().clone();
+
+        if player_right > camera_right {
+            self.camera.pos.x = player_right - self.camera.collision_rect.width() as i64 - self.camera.collision_rect.x() as i64;
+        } else if player_left < camera_left {
+            self.camera.pos.x = player_left - self.camera.collision_rect.x() as i64;
+        }
+
+        if player_bottom > camera_bottom {
+            self.camera.pos.y = player_bottom - self.camera.collision_rect.height() as i64;
+        } else if player_top < camera_top {
+            self.camera.pos.y = player_top;
+        }
+
+        // keep the camera within the map
+        if self.camera.pos.x+self.camera.width > map.pixel_width() as i64 {
+            self.camera.pos.x = map.pixel_width() as i64 - self.camera.width;
+        } else if self.camera.pos.x < 0 {
+            self.camera.pos.x = 0;
+        }
+
+        if self.camera.pos.y+self.camera.height > map.pixel_height() as i64 {
+            self.camera.pos.y = map.pixel_height() as i64 - self.camera.height;
+        } else if self.camera.pos.y < 0 {
+            self.camera.pos.y = 0;
+        }
+    }
 }
 
 /// Contains system data like the renderer,
 /// frame counter, fps timer, etc...
 pub struct System<'a> {
-    pub game: Game,
+    pub game: Game<'a>,
     pub r: Renderer<'a>,
     pub fc: u8,
     pub fps: u8,
@@ -335,7 +405,7 @@ pub struct System<'a> {
 
 impl<'a> System<'a> {
     /// Create a new `System`.
-    pub fn new(g: Game, r: Renderer<'a>, fps: u8, ep: EventPump, a: &'a Path) -> Self {
+    pub fn new(g: Game<'a>, r: Renderer<'a>, fps: u8, ep: EventPump, a: &'a Path) -> Self {
         System {
             game: g,
             r: r,
@@ -352,9 +422,25 @@ pub trait DebugDrawable {
     fn draw_debug(&mut self, r: &mut Renderer);
 }
 
-impl DebugDrawable for Game {
+impl<'a> DebugDrawable for Game<'a> {
     fn draw_debug(&mut self, r: &mut Renderer) {
+        self.camera.draw_debug(r);
         self.player.draw_debug(r);
+    }
+}
+
+impl DebugDrawable for Camera {
+    fn draw_debug(&mut self, r: &mut Renderer) {
+        let rect = &self.collision_rect;
+        let draw_col = r.draw_color();
+        r.set_draw_color(Color::RGB(255, 0, 0));
+        r.draw_rect(Rect::new_unwrap(
+            rect.x() + self.pos.x as i32,
+            rect.y() + self.pos.y as i32,
+            rect.width(),
+            rect.height()
+        ));
+        r.set_draw_color(draw_col);
     }
 }
 
@@ -392,10 +478,13 @@ pub trait Drawable {
     fn draw(&mut self, r: &mut Renderer);
 }
 
-impl Drawable for Game {
+impl<'a> Drawable for Game<'a> {
     /// `Game`'s `draw` method calls the draw methods
     /// for all entities that are currently onscreen.
     fn draw(&mut self, r: &mut Renderer) {
+        if let Some(ref mut map) = self.current_map {
+            map.draw(r);
+        }
         self.player.draw(r);
     }
 }
@@ -478,14 +567,29 @@ impl<'a> Updateable for System<'a> {
         }
 
         self.game.update();
-        let (w, h) = self.r.window().unwrap().size();
-        self.game.keep_on_screen(w, h);
+        if self.game.current_map.is_some() {
+            let (mut w, mut h) = (0, 0);
+            {
+                match self.game.current_map {
+                    Some(ref map) => {
+                        w = map.width*map.tile_width;
+                        h = map.height*map.tile_height;
+                    },
+                    None => {}
+                };
+            }
+            self.game.keep_on_screen(w, h);
+        }
     }
 }
 
-impl Updateable for Game {
+impl<'a> Updateable for Game<'a> {
     fn update(&mut self) {
         self.player.update();
+
+        if self.current_map.is_some() {
+            self.update_camera();
+        }
     }
 }
 

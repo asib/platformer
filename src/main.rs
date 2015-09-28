@@ -14,11 +14,13 @@ use sdl2::rect::Rect;
 fn main() {
     const TITLE: &'static str = "Platformer";
     const FPS: u8 = 30;
+    const WIDTH: u32 = 980;
+    const HEIGHT: u32 = 700;
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     sdl2_image::init(INIT_PNG);
-    let window = video_subsystem.window(TITLE, 980, 700)
+    let window = video_subsystem.window(TITLE, WIDTH, HEIGHT)
         .position_centered()
         .opengl()
         .build()
@@ -27,12 +29,36 @@ fn main() {
         .for_folder("assets")
         .unwrap();
     let r = window.renderer().software().build().unwrap();
+
+    let map = match tiled::Map::read_json(asset_path.join("map2.json")) {
+        Ok(m) => m,
+        Err(e) => match e {
+            tiled::ReadError::IoError(e) => panic!("IOError: {:?}", e),
+            tiled::ReadError::StringError(e) => panic!("StringError: {:?}", e),
+            tiled::ReadError::JsonError(e) => panic!("JSONError: {:?}", e),
+        },
+    };
+
+    let ts = map::Tileset::new_from_tiled_tileset(&asset_path.join("Platformer Pack/tiles_spritesheet.png"),
+        &map.tilesets[0], &r);
+    let mut new_map = map::Map::new_from_tiled_map(&map);
+    if let &Some(ref data) = &map.layers[0].data {
+        new_map.insert_data_using_tilset(data, &ts);
+    }
+
     let mut sys = System::new(
         Game::new(
             true,
             // false,
+            None,
+            Camera::new(
+                Point{x: 0, y: 0},
+                WIDTH as i64,
+                HEIGHT as i64,
+                Rect::new_unwrap(100, 100, 780, 500)
+            ),
             Player::new(
-                Point{x:50, y: 50},
+                Point{x: 250, y: 150},
                 Rect::new(10, 00, 32, 60).unwrap().unwrap(),
                 Rc::new(r.load_texture(&asset_path.join("sprite_map.png"))
                              .unwrap()),
@@ -74,33 +100,14 @@ fn main() {
         &asset_path
     );
 
-    let map = match tiled::Map::read_json(sys.assets.join("map2.json")) {
-        Ok(m) => m,
-        Err(e) => match e {
-            tiled::ReadError::IoError(e) => panic!("IOError: {:?}", e),
-            tiled::ReadError::StringError(e) => panic!("StringError: {:?}", e),
-            tiled::ReadError::JsonError(e) => panic!("JSONError: {:?}", e),
-        },
-    };
-
-    // match map.data_for_layer(0) {
-        // Ok(d) => println!("{}\n {:?}", d.len(), d),
-        // Err(e) => panic!("{:?}", e),
-    // };
-
-    let ts = map::Tileset::new_from_tiled_tileset(&sys.assets.join("Platformer Pack/tiles_spritesheet.png"),
-        &map.tilesets[0], &sys.r);
-    let mut new_map = map::Map::new_from_tiled_map(&map);
-    if let &Some(ref data) = &map.layers[0].data {
-        new_map.insert_data_using_tilset(data, &ts);
-    }
+    sys.game.set_map(&mut new_map);
 
     // println!("{:?}", new_map.tiles.iter().map(|ref l| l.iter().map(|ref t| t.clip_rect).collect::<Vec<Option<Rect>>>()).collect::<Vec<Vec<Option<Rect>>>>());
 
     while sys.game.running {
         sys.update();
         sys.game.clear(&mut sys.r);
-        new_map.draw(&mut sys.r);
+        //new_map.draw(&mut sys.r);
         sys.game.draw(&mut sys.r);
         if sys.game.debug {
             sys.game.draw_debug(&mut sys.r);

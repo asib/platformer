@@ -78,6 +78,16 @@ impl Tile {
     }
 }
 
+impl Clone for Tile {
+    fn clone(&self) -> Self {
+        Tile {
+            texture: self.texture.clone(),
+            clip_rect: self.clip_rect.clone(),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Map {
     pub width: u32,
     pub height: u32,
@@ -95,6 +105,14 @@ impl Map {
             tile_height: tmap.tileheight,
             tiles: Vec::new(),
         }
+    }
+
+    pub fn pixel_width(&self) -> u32 {
+        return self.width*self.tile_width;
+    }
+
+    pub fn pixel_height(&self) -> u32 {
+        return self.height*self.tile_height;
     }
 
     pub fn insert_data_using_tilset(&mut self, data: &[u8], ts: &Tileset) {
