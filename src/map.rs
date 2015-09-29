@@ -5,7 +5,7 @@ use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
 use sdl2_image::LoadTexture;
 use tiled;
-use super::Drawable;
+use super::{CameraDrawable, Camera};
 
 pub struct Tileset {
     pub firstgid: u32,
@@ -129,8 +129,8 @@ impl Map {
     }
 }
 
-impl Drawable for Map {
-    fn draw(&mut self, r: &mut Renderer) {
+impl CameraDrawable for Map {
+    fn draw(&mut self, r: &mut Renderer, c: &Camera) {
         for (i, row) in self.tiles.iter().enumerate() {
             let i = i as i32;
             for (j, tile) in row.iter().enumerate() {
@@ -139,8 +139,11 @@ impl Drawable for Map {
                 }
 
                 let j = j as i32;
+                let (x, y) = (j*self.tile_width as i32, i*self.tile_height as i32);
+                if (x+self.tile_width as i32) < c.pos.x as i32 || x > (c.pos.x+c.width) as i32 { continue }
+                if (y+self.tile_height as i32) < c.pos.y as i32 || y > (c.pos.y+c.height) as i32 { continue }
                 r.copy(&*tile.texture, tile.clip_rect,
-                    Some(Rect::new_unwrap(j*self.tile_width as i32, i*self.tile_height as i32,
+                    Some(Rect::new_unwrap(x - c.pos.x as i32, y - c.pos.y as i32,
                         self.tile_width, self.tile_height)));
             }
         }

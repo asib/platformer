@@ -425,7 +425,7 @@ pub trait DebugDrawable {
 impl<'a> DebugDrawable for Game<'a> {
     fn draw_debug(&mut self, r: &mut Renderer) {
         self.camera.draw_debug(r);
-        self.player.draw_debug(r);
+        self.player.draw_debug(r, &self.camera);
     }
 }
 
@@ -435,8 +435,8 @@ impl DebugDrawable for Camera {
         let draw_col = r.draw_color();
         r.set_draw_color(Color::RGB(255, 0, 0));
         r.draw_rect(Rect::new_unwrap(
-            rect.x() + self.pos.x as i32,
-            rect.y() + self.pos.y as i32,
+            rect.x(),
+            rect.y(),
             rect.width(),
             rect.height()
         ));
@@ -444,26 +444,30 @@ impl DebugDrawable for Camera {
     }
 }
 
-impl DebugDrawable for Player {
-    fn draw_debug(&mut self, r: &mut Renderer) {
-        self.me.draw_debug(r);
+pub trait CameraDebugDrawable {
+    fn draw_debug(&mut self, r: &mut Renderer, c: &Camera);
+}
+
+impl CameraDebugDrawable for Player {
+    fn draw_debug(&mut self, r: &mut Renderer, c: &Camera) {
+        self.me.draw_debug(r, c);
     }
 }
 
-impl DebugDrawable for MoveableEntity {
-    fn draw_debug(&mut self, r: &mut Renderer) {
-        self.en.draw_debug(r);
+impl CameraDebugDrawable for MoveableEntity {
+    fn draw_debug(&mut self, r: &mut Renderer, c: &Camera) {
+        self.en.draw_debug(r, c);
     }
 }
 
-impl DebugDrawable for Entity {
-    fn draw_debug(&mut self, r: &mut Renderer) {
+impl CameraDebugDrawable for Entity {
+    fn draw_debug(&mut self, r: &mut Renderer, c: &Camera) {
         let rect = &self.collision_rect;
         let draw_col = r.draw_color();
         r.set_draw_color(Color::RGB(255, 0, 0));
         r.draw_rect(Rect::new_unwrap(
-            rect.x() + self.pos.x as i32,
-            rect.y() + self.pos.y as i32,
+            rect.x() + self.pos.x as i32 - c.pos.x as i32,
+            rect.y() + self.pos.y as i32 - c.pos.y as i32,
             rect.width(),
             rect.height()
         ));
@@ -483,27 +487,40 @@ impl<'a> Drawable for Game<'a> {
     /// for all entities that are currently onscreen.
     fn draw(&mut self, r: &mut Renderer) {
         if let Some(ref mut map) = self.current_map {
-            map.draw(r);
+            map.draw(r, &self.camera);
         }
-        self.player.draw(r);
+        self.player.draw(r, &self.camera);
     }
 }
 
-impl Drawable for Entity {
-    fn draw(&mut self, r: &mut Renderer) {
+/// The `CameraDrawable` trait should be implemented by
+/// anything that requires camera data during the
+/// rendering process.
+pub trait CameraDrawable {
+    fn draw(&mut self, r: &mut Renderer, c: &Camera);
+}
+
+impl CameraDrawable for Entity {
+    fn draw(&mut self, r: &mut Renderer, c: &Camera) {
         let (w, h) = if let Some(dr) = self.draw_rect {
             (dr.width(), dr.height())
         } else {
             let q = self.sprite_map.query();
             (q.width, q.height)
         };
+
+        // calculate screen x, y, using camera coordinates
+        let (screen_x, screen_y) = (
+            self.pos.x - c.pos.x,
+            self.pos.y - c.pos.y
+        );
         r.copy(&self.sprite_map, self.draw_rect,
-            Rect::new(self.pos.x as i32, self.pos.y as i32, w, h).unwrap());
+            Rect::new(screen_x as i32, screen_y as i32, w, h).unwrap());
     }
 }
 
-impl Drawable for MoveableEntity {
-    fn draw(&mut self, r: &mut Renderer) {
+impl CameraDrawable for MoveableEntity {
+    fn draw(&mut self, r: &mut Renderer, c: &Camera) {
         if let (Some(dr), &Some(ref anim)) = (self.en.draw_rect, &self.anim) {
             // Calculate draw_rect
             let off = anim.dir_to_offset.get(&self.dir).unwrap();
@@ -522,13 +539,13 @@ impl Drawable for MoveableEntity {
             ));
         }
 
-        self.en.draw(r);
+        self.en.draw(r, c);
     }
 }
 
-impl Drawable for Player {
-    fn draw(&mut self, r: &mut Renderer) {
-        self.me.draw(r);
+impl CameraDrawable for Player {
+    fn draw(&mut self, r: &mut Renderer, c: &Camera) {
+        self.me.draw(r, c);
     }
 }
 
