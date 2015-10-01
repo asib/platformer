@@ -147,6 +147,5 @@ impl CameraDrawable for Map {
                         self.tile_width, self.tile_height)));
             }
         }
-        r.present();
     }
 }
